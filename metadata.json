@@ -1,0 +1,6 @@
+{
+  "name": "Intelligent Fitness Dashboard",
+  "description": "Real-time fitness tracking application with Google Fit integration, biometric dashboard, and AI-powered health insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["fitness_tracking", "biometrics", "real_time_sync"]
+}
