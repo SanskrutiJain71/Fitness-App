@@ -263,19 +263,107 @@ async function startServer() {
 
   app.post('/api/user/profile', (req, res) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
-    
-    try {
-      const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-      const userId = decoded.userId;
-      const { name, email } = req.body;
+    const { name, email, weight, height } = req.body;
 
-      db.prepare('UPDATE users SET name = ?, email = ? WHERE id = ?').run(name, email, userId);
-      res.json({ success: true, user: { id: userId, name, email } });
-    } catch (err) {
-      res.status(401).json({ error: 'Invalid token' });
+    if (authHeader) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+        const userId = decoded.userId;
+
+        db.prepare('UPDATE users SET name = ?, email = ?, weight = ?, height = ? WHERE id = ?').run(
+          name || 'User', email, weight || 0, height || 0, userId
+        );
+        return res.json({ success: true, user: { id: userId, name, email, weight, height } });
+      } catch (err) {
+        // Fall through to unauthenticated logic if token is invalid
+      }
     }
+
+    // Unauthenticated / Persistence via email
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    
+    let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    if (user) {
+      db.prepare('UPDATE users SET name = ?, weight = ?, height = ? WHERE id = ?').run(
+        name || user.name, weight || user.weight, height || user.height, user.id
+      );
+    } else {
+      const id = randomUUID();
+      db.prepare('INSERT INTO users (id, email, name, weight, height) VALUES (?, ?, ?, ?, ?)').run(
+        id, email, name || 'User', weight || 0, height || 0
+      );
+    }
+    const updatedUser = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    res.json({ success: true, user: updatedUser });
+  });
+
+  // Physical data update for Angular compatibility
+  app.post('/api/fitness/physical', (req, res) => {
+    const { email, weight, height } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+
+    let user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as any;
+    if (user) {
+      db.prepare('UPDATE users SET weight = ?, height = ? WHERE id = ?').run(weight || 0, height || 0, user.id);
+    } else {
+      const id = randomUUID();
+      db.prepare('INSERT INTO users (id, email, name, weight, height) VALUES (?, ?, ?, ?, ?)').run(
+        id, email, 'User', weight || 0, height || 0
+      );
+    }
+    res.json({ success: true });
+  });
+
+  app.get('/api/fitness/recommendations', (req, res) => {
+    const { email } = req.query;
+    let weight = 0;
+    let height = 0;
+
+    if (email) {
+      const user = db.prepare('SELECT weight, height FROM users WHERE email = ?').get(email) as any;
+      if (user) {
+        weight = user.weight;
+        height = user.height;
+      }
+    }
+
+    const recommendations = [];
+    if (weight <= 0 || height <= 0) {
+      recommendations.push(
+        { name: "General Walking", type: "Cardio", intensity: "Low", duration: "30 mins", description: "A great way to start your fitness journey. Focus on consistency.", icon: "Footprints" },
+        { name: "Basic Stretching", type: "Flexibility", intensity: "Low", duration: "15 mins", description: "Improve your range of motion and reduce muscle tension.", icon: "Activity" }
+      );
+    } else {
+      const bmi = weight / ((height / 100) * (height / 100));
+      if (bmi < 18.5) {
+        recommendations.push(
+          { name: "Progressive Strength Training", type: "Muscle Building", intensity: "Medium", duration: "45 mins", description: "Focus on compound movements to build lean muscle mass safely.", icon: "Zap" },
+          { name: "Hatha Yoga", type: "Flexibility", intensity: "Low", duration: "30 mins", description: "Balance strength with flexibility. Great for recovery.", icon: "Moon" }
+        );
+      } else if (bmi < 25) {
+        recommendations.push(
+          { name: "Distance Running", type: "Cardio", intensity: "High", duration: "30 mins", description: "Maintain your cardiovascular health with steady-state running.", icon: "Footprints" },
+          { name: "Advanced HIIT", type: "Metabolic", intensity: "High", duration: "20 mins", description: "Maximal effort intervals to boost your metabolism and power.", icon: "Flame" }
+        );
+      } else if (bmi < 30) {
+        recommendations.push(
+          { name: "Power Walking", type: "Cardio", intensity: "Medium", duration: "45 mins", description: "A higher intensity walk to burn fat without overstressing joints.", icon: "Footprints" },
+          { name: "Leisure Swimming", type: "Full Body", intensity: "Medium", duration: "40 mins", description: "Utilize the resistance of water for a gentle but effective workout.", icon: "Heart" }
+        );
+      } else {
+        recommendations.push(
+          { name: "Aqua Aerobics", type: "Low Impact", intensity: "Low", duration: "30 mins", description: "Ideal for joint health and steady weight management.", icon: "Heart" },
+          { name: "Indoor Cycling", type: "Cardio", intensity: "Low", duration: "30 mins", description: "Maintain fixed pace to improve cardiovascular efficiency.", icon: "Clock" }
+        );
+      }
+    }
+    res.json(recommendations);
+  });
+
+  app.get('/api/fitness/users', (req, res) => {
+    const users = db.prepare('SELECT name, email FROM users').all();
+    res.json(users);
   });
 
   // Vite middleware for development

@@ -83,13 +83,26 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
   }
 
+  saveStatus: string = '';
+
   savePhysicalData() {
-    if (this.user.email) {
-      localStorage.setItem('fitedge_email', this.user.email);
+    if (!this.user.email) {
+      this.saveStatus = 'Email required!';
+      setTimeout(() => this.saveStatus = '', 3000);
+      return;
     }
-    this.fitnessService.updatePhysicalData(this.summary.weight, this.summary.height, this.user.email).subscribe(() => {
-      console.log('Physical data saved');
-      this.loadRecommendations();
+    this.saveStatus = 'Saving...';
+    localStorage.setItem('fitedge_email', this.user.email);
+    this.fitnessService.updatePhysicalData(this.summary.weight, this.summary.height, this.user.email).subscribe({
+      next: () => {
+        this.saveStatus = 'Saved successfully!';
+        this.loadRecommendations();
+        setTimeout(() => this.saveStatus = '', 3000);
+      },
+      error: () => {
+        this.saveStatus = 'Error saving data.';
+        setTimeout(() => this.saveStatus = '', 3000);
+      }
     });
   }
 
@@ -144,5 +157,21 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   setView(view: string) {
     this.currentView = view;
+  }
+
+  get bmi(): number {
+    if (this.summary.weight > 0 && this.summary.height > 0) {
+      return this.summary.weight / ((this.summary.height / 100) * (this.summary.height / 100));
+    }
+    return 0;
+  }
+
+  get bmiCategory(): string {
+    const val = this.bmi;
+    if (val === 0) return 'Enter details';
+    if (val < 18.5) return 'Underweight';
+    if (val < 25) return 'Normal Weight';
+    if (val < 30) return 'Overweight';
+    return 'Obese';
   }
 }
