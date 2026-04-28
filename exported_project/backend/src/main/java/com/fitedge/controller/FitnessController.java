@@ -41,25 +41,56 @@ public class FitnessController {
     }
 
     @PostMapping("/physical")
-    public Map<String, Object> updatePhysical(@RequestBody Map<String, Double> payload, OAuth2AuthenticationToken authentication) {
-        if (authentication == null) return Map.of("error", "Not authenticated");
-        String email = authentication.getPrincipal().getAttribute("email");
-        User user = userRepository.findByEmail(email).orElseThrow();
-        user.setWeight(payload.get("weight"));
-        user.setHeight(payload.get("height"));
+    public Map<String, Object> updatePhysical(@RequestBody Map<String, Object> payload, OAuth2AuthenticationToken authentication) {
+        String email;
+        if (authentication != null) {
+            email = authentication.getPrincipal().getAttribute("email");
+        } else {
+            email = (String) payload.get("email");
+        }
+
+        if (email == null || email.isEmpty()) {
+            return Map.of("error", "Email is required to save physical data");
+        }
+
+        User user = userRepository.findByEmail(email).orElseGet(() -> {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setName((String) payload.getOrDefault("name", "User"));
+            return newUser;
+        });
+
+        if (payload.containsKey("weight")) user.setWeight(Double.parseDouble(payload.get("weight").toString()));
+        if (payload.containsKey("height")) user.setHeight(Double.parseDouble(payload.get("height").toString()));
+        
         userRepository.save(user);
-        return Map.of("success", true);
+        return Map.of("success", true, "weight", user.getWeight(), "height", user.getHeight());
     }
 
     @GetMapping("/recommendations")
-    public List<RecommendationService.ExerciseRecommendation> getRecommendations(OAuth2AuthenticationToken authentication) {
-        if (authentication == null) {
-            return recommendationService.getRecommendations(0, 0);
+    public List<RecommendationService.ExerciseRecommendation> getRecommendations(
+            @RequestParam(required = false) String email,
+            OAuth2AuthenticationToken authentication) {
+        
+        Double weight = 0.0;
+        Double height = 0.0;
+
+        if (authentication != null) {
+            String authEmail = authentication.getPrincipal().getAttribute("email");
+            User user = userRepository.findByEmail(authEmail).orElse(null);
+            if (user != null) {
+                weight = user.getWeight();
+                height = user.getHeight();
+            }
+        } else if (email != null && !email.isEmpty()) {
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user != null) {
+                weight = user.getWeight();
+                height = user.getHeight();
+            }
         }
-        String email = authentication.getPrincipal().getAttribute("email");
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) return recommendationService.getRecommendations(0, 0);
-        return recommendationService.getRecommendations(user.getWeight(), user.getHeight());
+
+        return recommendationService.getRecommendations(weight, height);
     }
 
     @GetMapping("/users")

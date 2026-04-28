@@ -35,6 +35,10 @@ export class AppComponent implements OnInit, AfterViewInit {
   constructor(private fitnessService: FitnessService) {}
 
   ngOnInit() {
+    const savedEmail = localStorage.getItem('fitedge_email');
+    if (savedEmail) {
+      this.user.email = savedEmail;
+    }
     this.loadData();
     this.listenToUpdates();
     this.loadRecommendations();
@@ -71,7 +75,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   loadRecommendations() {
-    this.fitnessService.getRecommendations().subscribe(data => {
+    this.fitnessService.getRecommendations(this.user.email).subscribe(data => {
       this.recommendations = data;
     });
     this.fitnessService.getUsers().subscribe(data => {
@@ -80,7 +84,10 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   savePhysicalData() {
-    this.fitnessService.updatePhysicalData(this.summary.weight, this.summary.height).subscribe(() => {
+    if (this.user.email) {
+      localStorage.setItem('fitedge_email', this.user.email);
+    }
+    this.fitnessService.updatePhysicalData(this.summary.weight, this.summary.height, this.user.email).subscribe(() => {
       console.log('Physical data saved');
       this.loadRecommendations();
     });

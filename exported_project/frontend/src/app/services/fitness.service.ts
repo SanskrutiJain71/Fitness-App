@@ -41,12 +41,13 @@ export class FitnessService {
     return this.http.get(`${this.apiUrl}/fitness/data`);
   }
 
-  updatePhysicalData(weight: number, height: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/fitness/physical`, { weight, height });
+  updatePhysicalData(weight: number, height: number, email?: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/fitness/physical`, { weight, height, email });
   }
 
-  getRecommendations(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/fitness/recommendations`);
+  getRecommendations(email?: string): Observable<any[]> {
+    const url = email ? `${this.apiUrl}/fitness/recommendations?email=${email}` : `${this.apiUrl}/fitness/recommendations`;
+    return this.http.get<any[]>(url);
   }
 
   getLoginUrl(): string {
