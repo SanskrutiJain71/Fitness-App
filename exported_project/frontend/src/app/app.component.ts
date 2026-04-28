@@ -7,6 +7,11 @@ import { LucideAngularModule, Zap, Footprints, Flame, Heart, Construction, Chevr
 
 Chart.register(...registerables);
 
+const lucideIcons = { 
+  Zap, Footprints, Flame, Heart, Construction, 
+  ChevronRight, Activity, Clock, Moon, Save, Settings, UserIcon, ArrowUpRight 
+};
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -17,10 +22,7 @@ Chart.register(...registerables);
 export class AppComponent implements OnInit, AfterViewInit {
   @ViewChild('sleepChart') sleepChartCanvas!: ElementRef;
   
-  readonly icons = { 
-    Zap, Footprints, Flame, Heart, Construction, 
-    ChevronRight, Activity, Clock, Moon, Save, Settings, UserIcon, ArrowUpRight 
-  };
+  readonly icons = lucideIcons;
 
   summary: any = { steps: 0, calories: 0, heartRate: 0, lastSleep: 0, sleepHistory: [], weight: 0, height: 0 };
   heartRateStream: any[] = [];

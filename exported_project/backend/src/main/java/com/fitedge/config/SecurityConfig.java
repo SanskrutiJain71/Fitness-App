@@ -17,6 +17,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/fitness/recommendations").permitAll()
                 .requestMatchers("/api/fitness/**").authenticated()
                 .requestMatchers("/ws-fitness/**", "/index.html", "/", "/api/summary").permitAll()
                 .anyRequest().authenticated()

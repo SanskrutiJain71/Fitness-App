@@ -2,10 +2,12 @@ CREATE DATABASE IF NOT EXISTS fitedge;
 USE fitedge;
 
 CREATE TABLE users (
-    id VARCHAR(255) PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255),
     name VARCHAR(255) NOT NULL,
+    weight DOUBLE DEFAULT 0,
+    height DOUBLE DEFAULT 0,
     google_fit_token TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
