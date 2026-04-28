@@ -1,0 +1,13 @@
+{
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "angular.enable-strict-mode-prompt": false,
+  "tailwindCSS.includeLanguages": {
+    "plaintext": "html",
+    "html": "html",
+    "typescript": "typescript"
+  },
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  }
+}

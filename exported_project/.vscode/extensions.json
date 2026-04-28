@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "pivotal.vscode-boot-dev-pack",
+    "vscjava.vscode-java-pack",
+    "angular.ng-template",
+    "bradlc.vscode-tailwindcss"
+  ]
+}
