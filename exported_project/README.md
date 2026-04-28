@@ -1,12 +1,40 @@
-# Production Setup Guide
+# Production Setup Guide (Spring Boot + Angular)
 
-## Live Demo
-- **Shared App:** [LIVE PREVIEW](https://ais-pre-mt35sudd6rpwasltbjzxn6-130682573877.asia-southeast1.run.app)
-- **Development Link:** [DEV PREVIEW](https://ais-dev-mt35sudd6rpwasltbjzxn6-130682573877.asia-southeast1.run.app)
+This project has been migrated to a modern Enterprise stack:
+- **Backend:** Spring Boot (Java 17+)
+- **Frontend:** Angular (v17+)
 
-This project includes a complete fitness tracking application setup. 
+## Prerequisites
+- **Java JDK 17** or higher
+- **Node.js** (v18+) and **npm**
+- **Maven** (optional, wrapper included)
 
-## 1. Project Structure
+## 1. Backend (Spring Boot) Setup
+1. Open VS Code and open the `backend` folder.
+2. Install the **Extension Pack for Java** in VS Code.
+3. Run the application:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+   *The server will start on `http://localhost:8080`.*
+
+## 2. Frontend (Angular) Setup
+1. Open a new terminal in the `frontend` folder.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the Angular development server:
+   ```bash
+   npm start
+   ```
+   *The app will open on `http://localhost:4200`.*
+
+## 3. Real-time Features
+The application uses **Spring WebSockets (STOMP)** to provide real-time biometric pulse data. You don't need any extra configuration; it works out of the box as long as both servers are running.
+
+## 4. Database
+By default, it uses an H2 in-memory database. You can configure MySQL or PostgreSQL in `src/main/resources/application.properties`.
 - **/frontend**: Angular application using Tailwind CSS and Chart.js.
 - **/backend**: Spring Boot application with JWT and Google Fit integration.
 - **/database**: SQL schema for MySQL.
